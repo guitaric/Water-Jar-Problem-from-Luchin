@@ -1,0 +1,90 @@
+#water jar problem
+#
+#A prolog program that can calculate the fastest way to solve the water jar problem by providing a set of moving rules.
+
+
+volume(a, 8).
+volume(b, 5).
+volume(c, 3).
+
+
+move(luc(A1, B1, C), luc(A2, B2, C)) :-			% Füllt von A nach B
+    A1 > 0,										% Enthält A etwas?	
+	volume(b, V),								% Fassungsvermögen von B wird integriert
+    B1 < V,          						    % Ist in B Platz?
+    Fill is min(A1, V - B1),   					% Wieviel wird bewegt? (Bis A leer ist/Bis B voll ist)
+    A2 is A1 - Fill,							% Inhalt von A nach dem Transfer
+    B2 is B1 + Fill.							% Inhalt von B nach dem Transfer
+    
+move(luc(A1, B, C1), luc(A2, B, C2)) :-			%Füllt von A nach C
+	A1 > 0,										% Enthält A etwas?
+	volume(c, V),								% Fassungsvermögen von C wird integriert
+    C1 < V,          							% Ist in C Platz?
+    Fill is min(A1, V - C1),   					% Wieviel wird bewegt? (Bis A leer ist/Bis C voll ist)
+    A2 is A1 - Fill,							% Inhalt von A nach dem Transfer
+    C2 is C1 + Fill.							% Inhalt von C nach dem Transfer
+    
+move(luc(A, B1, C1), luc(A, B2, C2)) :-			% Füllt von B nach C
+	B1 > 0,										% Enthält B etwas?
+	volume(c, V),								% Fassungsvermögen von C wird integriert
+    C1 < V,          							% Ist in C Platz?
+    Fill is min(B1, V - C1),   					% Wieviel wird bewegt? (Bis B leer ist/Bis C voll ist)	
+    B2 is B1 - Fill,							% Inhalt von B nach dem Transfer
+    C2 is C1 + Fill.							% Inhalt von C nach dem Transfer
+
+
+
+move(luc(A1, B1, C), luc(A2, B2, C)) :-			% Füllt von B nach A
+    volume(a, V),								% Fassungsvermögen von A wird integriert
+    A1 < V,										% A darf nicht voll sein
+    B1 > 0,          						    % In B muss etwas drin sein
+    Fill is min(B1, V - A1),  					% Wieviel wird bewegt? (Bis B leer ist/Bis A voll ist)		
+    A2 is A1 + Fill,							% Inhalt von A nach dem Transfer
+    B2 is B1 - Fill.							% Inhalt von B nach dem Transfer
+
+move(luc(A1, B, C1), luc(A2, B, C2)) :-			% Füllt von C nach A
+    volume(a, V),								% Fassungsvermögen von A wird integriert
+    A1 < V,										% A darf nicht voll sein
+    C1 > 0,          						    % In C muss etwas drin sein
+    Fill is min(C1, V - A1),  					% Wieviel wird bewegt? (Bis C leer ist/Bis A voll ist)		
+    A2 is A1 + Fill,							% Inhalt von A nach dem Transfer
+    C2 is C1 - Fill.							% Inhalt von C nach dem Transfer
+    
+move(luc(A, B1, C1), luc(A, B2, C2)) :-			% Füllt von C nach B
+	volume(b, V),								% Fassungsvermögen von A wird integriert
+    B1 < V,										% B darf nicht voll sein
+    C1 > 0,          						    % In B muss etwas drin sein
+    Fill is min(C1, V - B1),  					% Wieviel wird bewegt? (Bis C leer ist/Bis B voll ist)		
+    B2 is B1 + Fill,							% Inhalt von B nach dem Transfer
+    C2 is C1 - Fill.							% Inhalt von C nach dem Transfer
+
+
+
+travel([A | Visited], B) :-
+    move(A, B),
+    not(member(B, Visited)).
+
+neighbours(Visited, L) :-
+    findall([X | Visited], travel(Visited, X), L).
+
+% Angekommen
+depth([[B | Solution] | _], B, [B | Solution]).
+
+% Weitersuchen
+depth([Route | Others], B, Solution) :-
+    neighbours(Route, X),
+    append(Others, X, New),
+    depth(New, B, Solution).
+
+% Hilfsprädikat
+depth_search(A, B, Solution) :-
+    depth([[A]], B, S), reverse(S, Solution).
+
+readysetgo :-
+    Start = luc(8, 0, 0),
+    Goal = luc(4, 4, 0),
+    depth_search(Start, Goal, Solution),
+    writeln(Solution).
+
+    
+ 
